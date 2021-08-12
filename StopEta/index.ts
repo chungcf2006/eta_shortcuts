@@ -28,13 +28,18 @@ export default async function (context: Context, req: HttpRequest): Promise<void
                         eta_minute: Math.max(etaDiff, 0)
                     }
                 })
-                .sort((a, b) => a.eta.valueOf() - b.eta.valueOf())
-                .map(eta => `${eta.route} - ${eta.dest_tc}: ${eta.eta_minute}分${eta.rmk_tc?" ("+eta.rmk_tc+")":""}`)
-                .join("\n")
-        })));
+        })))
+        .flat()
+        
+        .sort((a, b) => a.eta_seq - b.eta_seq)
+        .sort((a, b) => a.seq - b.seq)
+        .sort((a, b) => a.dest_tc.localeCompare(b.dest_tc))
+        .sort((a, b) => a.route.localeCompare(b.route))
         
         context.res = {
-            body: etaList.filter(x => x.length).join("\n=======\n")
+            body: etaList
+            .map(eta => `${eta.route} - ${eta.seq}. ${eta.dest_tc}: ${eta.eta_minute}分${eta.rmk_tc?" ("+eta.rmk_tc+")":""}`)
+            .join("\n")
         }
     } else {
         context.res = {
